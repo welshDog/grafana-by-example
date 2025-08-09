@@ -1,0 +1,86 @@
+{
+    "dashboard": {
+        "id": null,
+        "title": "\ud83c\udfc6 HYPERFOCUS EMPIRE - Server Infrastructure Overview",
+        "tags": [
+            "hyperfocus-empire",
+            "automated"
+        ],
+        "timezone": "browser",
+        "panels": [
+            {
+                "id": 1,
+                "title": "Cpu Usage",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "rate(cpu_usage[5m])",
+                        "refId": "A"
+                    }
+                ],
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            {
+                "id": 2,
+                "title": "Memory Usage",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "rate(memory_usage[5m])",
+                        "refId": "A"
+                    }
+                ],
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 0
+                }
+            },
+            {
+                "id": 3,
+                "title": "Disk Usage",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "rate(disk_usage[5m])",
+                        "refId": "A"
+                    }
+                ],
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 0,
+                    "y": 8
+                }
+            },
+            {
+                "id": 4,
+                "title": "Network Io",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "rate(network_io[5m])",
+                        "refId": "A"
+                    }
+                ],
+                "gridPos": {
+                    "h": 8,
+                    "w": 12,
+                    "x": 12,
+                    "y": 8
+                }
+            }
+        ],
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "refresh": "5s"
+    }
+}
