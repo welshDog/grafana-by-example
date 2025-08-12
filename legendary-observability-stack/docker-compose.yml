@@ -1,0 +1,355 @@
+version: '3.8'
+
+# 🏆💎⚡ LEGENDARY COMPLETE OBSERVABILITY STACK ⚡💎🏆
+# Full Prometheus + Grafana + Loki + Demo Health Check Service
+# Ready for production monitoring with ADHD-optimized configurations
+
+networks:
+  legendary-monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  loki_data: {}
+  alertmanager_data: {}
+
+services:
+  # 📊 PROMETHEUS - Metrics Collection & Storage
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: legendary-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--web.external-url=http://localhost:9090'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./config/prometheus:/etc/prometheus:ro
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.10
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "legendary.service=prometheus"
+      - "legendary.tier=core"
+
+  # 🎯 GRAFANA - Visualization & Dashboards
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: legendary-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=LegendaryBROski2025!
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-clock-panel,camptocamp-prometheus-alertmanager-datasource,grafana-polystat-panel
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards,lokiLive,lokiDataframeApi
+      - GF_LOG_LEVEL=info
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_SECURITY_COOKIE_SECURE=false
+      - GF_SECURITY_COOKIE_SAMESITE=lax
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.20
+    depends_on:
+      - prometheus
+      - loki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "legendary.service=grafana"
+      - "legendary.tier=core"
+
+  # 📝 LOKI - Log Aggregation
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: legendary-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./config/loki:/etc/loki:ro
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.30
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "legendary.service=loki"
+      - "legendary.tier=core"
+
+  # 📤 PROMTAIL - Log Collection Agent
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: legendary-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./config/promtail:/etc/promtail:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.31
+    depends_on:
+      - loki
+    labels:
+      - "legendary.service=promtail"
+      - "legendary.tier=agent"
+
+  # 🔔 ALERTMANAGER - Alert Management
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: legendary-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./config/alertmanager:/etc/alertmanager:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--web.route-prefix=/'
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.40
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "legendary.service=alertmanager"
+      - "legendary.tier=core"
+
+  # 🔍 NODE EXPORTER - Host Metrics
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: legendary-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.50
+    labels:
+      - "legendary.service=node-exporter"
+      - "legendary.tier=exporter"
+
+  # 📈 CADVISOR - Container Metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: legendary-cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    privileged: true
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.51
+    labels:
+      - "legendary.service=cadvisor"
+      - "legendary.tier=exporter"
+
+  # 🏥 LEGENDARY HEALTH CHECK SERVICE - Demo Application
+  legendary-health-service:
+    build:
+      context: ./health-service
+      dockerfile: Dockerfile
+    container_name: legendary-health-service
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - SERVICE_NAME=legendary-health-service
+      - METRICS_PORT=8090
+      - LOG_LEVEL=info
+      - HEALTH_CHECK_INTERVAL=30s
+      - BROSKIE_REWARDS_ENABLED=true
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.60
+    depends_on:
+      - prometheus
+      - loki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "legendary.service=health-service"
+      - "legendary.tier=application"
+
+  # 🎮 JAEGER - Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.51
+    container_name: legendary-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.70
+    labels:
+      - "legendary.service=jaeger"
+      - "legendary.tier=tracing"
+
+  # 📊 TEMPO - Grafana Tracing Backend
+  tempo:
+    image: grafana/tempo:2.3.0
+    container_name: legendary-tempo
+    restart: unless-stopped
+    ports:
+      - "3200:3200"
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./config/tempo:/etc/tempo.yaml:ro
+      - ./data/tempo:/tmp/tempo
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.71
+    labels:
+      - "legendary.service=tempo"
+      - "legendary.tier=tracing"
+
+  # 🔥 REDIS - Caching & Session Storage
+  redis:
+    image: redis:7.2-alpine
+    container_name: legendary-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass LegendaryBROski2025!
+    volumes:
+      - ./data/redis:/data
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.80
+    labels:
+      - "legendary.service=redis"
+      - "legendary.tier=storage"
+
+  # ⚡ REDIS EXPORTER - Redis Metrics
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: legendary-redis-exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://legendary-redis:6379
+      - REDIS_PASSWORD=LegendaryBROski2025!
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.81
+    depends_on:
+      - redis
+    labels:
+      - "legendary.service=redis-exporter"
+      - "legendary.tier=exporter"
+
+  # 🧠 LEGENDARY MEMORY CRYSTAL SERVICE - Memory System Integration
+  memory-crystal-service:
+    build:
+      context: ./memory-crystal-service
+      dockerfile: Dockerfile
+    container_name: legendary-memory-crystal-service
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+    environment:
+      - SERVICE_NAME=memory-crystal-service
+      - METRICS_PORT=8091
+      - CRYSTAL_STORAGE_PATH=/app/crystals
+      - REDIS_URL=redis://legendary-redis:6379
+      - REDIS_PASSWORD=LegendaryBROski2025!
+    volumes:
+      - ./data/memory-crystals:/app/crystals
+      - ./logs:/app/logs
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.90
+    depends_on:
+      - redis
+      - prometheus
+    labels:
+      - "legendary.service=memory-crystal"
+      - "legendary.tier=application"
+
+  # 🚀 DOCKER-COMPOSE UI - Stack Management Interface
+  docker-compose-ui:
+    image: francescou/docker-compose-ui:1.13.0
+    container_name: legendary-compose-ui
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - .:/opt/docker-compose-projects/legendary-stack:ro
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      legendary-monitoring:
+        ipv4_address: 172.20.0.100
+    labels:
+      - "legendary.service=compose-ui"
+      - "legendary.tier=management"
