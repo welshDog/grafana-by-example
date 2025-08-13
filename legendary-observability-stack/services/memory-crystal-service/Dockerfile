@@ -27,8 +27,6 @@ RUN mkdir -p /app/logs /app/static /app/templates
 
 # 📄 COPY APPLICATION FILES
 COPY app.py .
-COPY static/ ./static/ 2>/dev/null || true
-COPY templates/ ./templates/ 2>/dev/null || true
 
 # 👤 CREATE NON-ROOT USER (security best practice)
 RUN groupadd -r legendary && useradd -r -g legendary legendary

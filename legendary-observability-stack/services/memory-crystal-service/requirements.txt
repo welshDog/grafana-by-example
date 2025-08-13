@@ -15,9 +15,6 @@ hiredis==2.2.3
 # 🌐 HTTP Requests
 requests==2.31.0
 
-# 🔒 Cryptography & Hashing
-hashlib-compat==1.0.1
-
 # 🎯 ADHD-Optimized Utilities
 colorama==0.4.6
 rich==13.5.2

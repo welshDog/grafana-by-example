@@ -9,7 +9,7 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 192.168.100.0/24
 
 volumes:
   prometheus_data: {}
@@ -24,7 +24,7 @@ services:
     container_name: legendary-prometheus
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "9091:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -33,13 +33,13 @@ services:
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
       - '--web.enable-admin-api'
-      - '--web.external-url=http://localhost:9090'
+      - '--web.external-url=http://localhost:9091'
     volumes:
       - prometheus_data:/prometheus
       - ./config/prometheus:/etc/prometheus:ro
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.10
+        ipv4_address: 192.168.100.10
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
@@ -73,7 +73,7 @@ services:
       - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.20
+        ipv4_address: 192.168.100.20
     depends_on:
       - prometheus
       - loki
@@ -92,14 +92,14 @@ services:
     container_name: legendary-loki
     restart: unless-stopped
     ports:
-      - "3100:3100"
+      - "3101:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki_data:/loki
       - ./config/loki:/etc/loki:ro
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.30
+        ipv4_address: 192.168.100.30
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
       interval: 30s
@@ -121,7 +121,7 @@ services:
     command: -config.file=/etc/promtail/config.yml
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.31
+        ipv4_address: 192.168.100.31
     depends_on:
       - loki
     labels:
@@ -145,7 +145,7 @@ services:
       - '--web.route-prefix=/'
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.40
+        ipv4_address: 192.168.100.40
     depends_on:
       - prometheus
     healthcheck:
@@ -163,7 +163,7 @@ services:
     container_name: legendary-node-exporter
     restart: unless-stopped
     ports:
-      - "9100:9100"
+      - "9101:9100"
     command:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
@@ -174,7 +174,7 @@ services:
       - /:/rootfs:ro
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.50
+        ipv4_address: 192.168.100.50
     labels:
       - "legendary.service=node-exporter"
       - "legendary.tier=exporter"
@@ -197,7 +197,7 @@ services:
     privileged: true
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.51
+        ipv4_address: 192.168.100.51
     labels:
       - "legendary.service=cadvisor"
       - "legendary.tier=exporter"
@@ -205,7 +205,7 @@ services:
   # 🏥 LEGENDARY HEALTH CHECK SERVICE - Demo Application
   legendary-health-service:
     build:
-      context: ./health-service
+      context: ./services/legendary-health-service
       dockerfile: Dockerfile
     container_name: legendary-health-service
     restart: unless-stopped
@@ -221,7 +221,7 @@ services:
       - ./logs:/app/logs
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.60
+        ipv4_address: 192.168.100.60
     depends_on:
       - prometheus
       - loki
@@ -246,7 +246,7 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.70
+        ipv4_address: 192.168.100.70
     labels:
       - "legendary.service=jaeger"
       - "legendary.tier=tracing"
@@ -266,7 +266,7 @@ services:
       - ./data/tempo:/tmp/tempo
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.71
+        ipv4_address: 192.168.100.71
     labels:
       - "legendary.service=tempo"
       - "legendary.tier=tracing"
@@ -277,13 +277,13 @@ services:
     container_name: legendary-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: redis-server --appendonly yes --requirepass LegendaryBROski2025!
     volumes:
       - ./data/redis:/data
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.80
+        ipv4_address: 192.168.100.80
     labels:
       - "legendary.service=redis"
       - "legendary.tier=storage"
@@ -300,7 +300,7 @@ services:
       - REDIS_PASSWORD=LegendaryBROski2025!
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.81
+        ipv4_address: 192.168.100.81
     depends_on:
       - redis
     labels:
@@ -310,7 +310,7 @@ services:
   # 🧠 LEGENDARY MEMORY CRYSTAL SERVICE - Memory System Integration
   memory-crystal-service:
     build:
-      context: ./memory-crystal-service
+      context: ./services/memory-crystal-service
       dockerfile: Dockerfile
     container_name: legendary-memory-crystal-service
     restart: unless-stopped
@@ -327,7 +327,7 @@ services:
       - ./logs:/app/logs
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.90
+        ipv4_address: 192.168.100.90
     depends_on:
       - redis
       - prometheus
@@ -349,7 +349,7 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
     networks:
       legendary-monitoring:
-        ipv4_address: 172.20.0.100
+        ipv4_address: 192.168.100.100
     labels:
       - "legendary.service=compose-ui"
       - "legendary.tier=management"
