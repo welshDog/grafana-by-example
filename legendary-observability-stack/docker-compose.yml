@@ -262,7 +262,7 @@ services:
       - "4318:4318"  # OTLP HTTP
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
-      - ./config/tempo:/etc/tempo.yaml:ro
+      - ./config/tempo/tempo.yaml:/etc/tempo.yaml:ro
       - ./data/tempo:/tmp/tempo
     networks:
       legendary-monitoring:
