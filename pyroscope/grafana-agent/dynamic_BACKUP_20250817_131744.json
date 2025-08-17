@@ -1,4 +1,0 @@
-{ 
- "scrape_interval": "63s",
- "scrape_timeout": "93s"
-} 
