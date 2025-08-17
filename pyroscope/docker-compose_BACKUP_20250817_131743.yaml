@@ -1,0 +1,36 @@
+version: "3.8"
+volumes:
+  grafana:
+  postgres:
+
+services:
+
+  grafana-alloy:
+    image: grafana/alloy:latest
+    user: root
+    privileged: true
+    pid: host
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./alloy-docker-config.river:/config.alloy
+    ports:
+    - 12345:12345
+    environment:
+      PYROSCOPE_SERVER_ADDRESS: ${PYROSCOPE_SERVER_ADDRESS}
+      PYROSCOPE_BASIC_AUTH_USER: ${PYROSCOPE_BASIC_AUTH_USER}
+      PYROSCOPE_BASIC_AUTH_PASSWORD: ${PYROSCOPE_BASIC_AUTH_PASSWORD}
+    command:
+    - run
+    - /config.alloy
+    - --storage.path=/tmp/alloy
+    - --server.http.listen-addr=0.0.0.0:12345
+
+  # Test Application in Go
+  app_go:
+    build: testapp/.
+    ports:
+      - 6061:6060
+
+ # Test Application in C++
+  app_c:
+    build: c-app/.

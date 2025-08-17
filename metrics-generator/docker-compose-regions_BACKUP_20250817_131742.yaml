@@ -1,0 +1,71 @@
+version: "3.8"
+volumes:
+  grafana:
+  postgres:
+
+services:
+
+  # Metrics Generator
+  # https://github.com/prometheus/client_python
+  metrics-generator1:
+    image: metrics-generator/metrics-generator
+    build: ./metrics-generator
+    environment:
+      - PROMTHEUS_HTTP_PORT=8001
+    ports:
+      - "8001:8001"
+    command: [ "regions",  "test1", "5", "5", "5", "360", "60" ]
+
+  metrics-generator2:
+    image: metrics-generator/metrics-generator
+    build: ./metrics-generator
+    environment:
+      - PROMTHEUS_HTTP_PORT=8002
+    ports:
+      - "8002:8002"
+    command: [ "regions",  "test2", "5", "5", "5", "360", "60" ]
+
+  metrics-generator3:
+    image: metrics-generator/metrics-generator
+    build: ./metrics-generator
+    environment:
+      - PROMTHEUS_HTTP_PORT=8003
+    ports:
+      - "8003:8003"
+    command: [ "regions", "test3", "5", "5", "5", "360", "60" ]
+
+
+  grafana-alloy:
+    image: grafana/alloy:latest
+    container_name: grafana-alloy
+    ports:
+      - 12345:12345 # Alloy Controller
+      - 24318:24318 # OTEL  Receiver HTTP
+      - 24317:24317 # OTEL  Receiver GRPC
+    volumes:
+      - ./grafana-alloy/grafana-alloy-2.river:/etc/alloy/config.alloy
+      - ./grafana-cloud-authentication.json:/grafana-cloud-authentication.json
+    environment:
+      - GRAFANA_METRICS_WRITE_URL=${GRAFANA_METRICS_WRITE_URL}
+      - GRAFANA_METRICS_USERNAME=${GRAFANA_METRICS_USERNAME}
+      - GRAFANA_METRICS_API_KEY=${GRAFANA_METRICS_API_KEY}
+      - PROMETHEUS_SCRAPE_NODE=simplemetric-generator:8001
+      - METRIC_GEN_SIMPLE_TRACE_ID=${METRIC_GEN_SIMPLE_TRACE_ID}
+    command: [  "run",
+                "--server.http.listen-addr=0.0.0.0:12345",
+                "--stability.level=experimental",
+                "/etc/alloy/config.alloy", ]  
+
+  # # Grafana Agent
+  # # https://grafana.com/docs/agent/latest/
+  # grafana-agent:
+  #   image: grafana/agent:latest
+  #   ports:
+  #     - "12347:12345"
+  #     - "12348:12348"
+  #     - "16685:16685"
+  #     - "16831:16831"
+  #     - "55679:55679"
+  #   volumes:
+  #     - "./configured-grafana-agent-config-cloud.yaml:/etc/agent/agent.yaml"
+  #   command: [ "-config.file=/etc/agent/agent.yaml" ]

@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+
+  grafana-pdc-agent:
+    image: grafana/pdc-agent:latest
+    #entrypoint: [ /usr/bin/pdc  ]
+    command: [ -token, $GRAFANA_CLOUD_PDC_TOKEN,
+               -cluster, $GRAFANA_CLOUD_PDC_CLUSTER,
+               -gcloud-hosted-grafana-id, $GRAFANA_CLOUD_PDC_ID ]
+
+    #           -domain, $GRAFANA_CLOUD_PDC_DOMAIN ]
+
+  # https://hub.docker.com/_/postgres
+  postgres-server:
+    image: postgres:latest
+    depends_on:
+      - grafana-pdc-agent
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=welcome1 
+    volumes:
+      - "./dvdrental.tar:/dvdrental.tar"
+      - "./ctl.sh:/ctl.sh"
+      - "./sql-test1.sql:/sql-test1.sql"
+      - "./postgres/postgresql.conf:/postgresql.conf"
+      #- "./logs/:/var/log/postgresql/"
+    entrypoint: [ ./ctl.sh ]
+    command: [ run ]
+    #command: [ sleep ]
+      
+  # Grafana Metrics
+  mimir:
+    image: grafana/mimir:latest
+    depends_on:
+      - grafana-pdc-agent 
+    volumes:
+      - "./mimir/config-single.yaml:/etc/mimir/config.yaml"
+    ports:
+      - "9009:9009"
+    command: [
+      "-config.file=/etc/mimir/config.yaml"
+    ]
+
+    # Grafana Agent
+  grafana-agent:
+    image: grafana/agent:latest
+    depends_on:
+      - mimir
+    ports:
+      - "12345:12345"
+      - "3500:3500"
+      - "16603:16603"
+    volumes:
+      - "./grafana-agent/config.yaml:/etc/agent/agent.yaml"
+    command: [
+      "-config.file=/etc/agent/agent.yaml",
+      "-server.http.address=0.0.0.0:12345",
+    ]
+
+
+      

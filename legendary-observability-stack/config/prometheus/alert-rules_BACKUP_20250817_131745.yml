@@ -1,0 +1,241 @@
+# 🚨💎⚡ LEGENDARY PROMETHEUS ALERTING RULES ⚡💎🚨
+# ADHD-optimized rules with intelligent thresholds
+# Focused on actionable alerts that matter
+
+groups:
+# 🏥 HEALTH SERVICE ALERTING GROUP
+- name: legendary_health_service
+  interval: 30s
+  rules:
+
+  # 🚨 CRITICAL: Health service completely down
+  - alert: HealthServiceDown
+    expr: up{job="legendary-health-service"} == 0
+    for: 30s
+    labels:
+      severity: critical
+      service: health-monitor
+      team: legendary-ops
+    annotations:
+      summary: "🚨 LEGENDARY Health Service is DOWN"
+      description: "The Legendary Health Service has been down for more than 30 seconds. Empire monitoring compromised!"
+      resolution: "Check container status: docker-compose ps | grep health-service"
+      health_score: "0"
+
+  # ⚠️ WARNING: Low overall system health
+  - alert: LowSystemHealth
+    expr: legendary_system_health_score < 85
+    for: 2m
+    labels:
+      severity: warning
+      service: health-monitor
+      component: overall-health
+    annotations:
+      summary: "⚠️ System Health Below Optimal ({{ $value }}%)"
+      description: "Overall system health has dropped to {{ $value }}%. Investigation recommended."
+      health_score: "{{ $value }}"
+
+  # 🚨 CRITICAL: System health critically low
+  - alert: CriticalSystemHealth
+    expr: legendary_system_health_score < 70
+    for: 1m
+    labels:
+      severity: critical
+      service: health-monitor
+      component: overall-health
+    annotations:
+      summary: "🚨 CRITICAL: System Health Dangerously Low ({{ $value }}%)"
+      description: "System health at {{ $value }}% - immediate action required!"
+      resolution: "Run emergency health check: python LEGENDARY_MASTER_HEALTH_CHECK_SYSTEM_FIXED.py"
+      health_score: "{{ $value }}"
+
+  # ⚡ INFO: High performance achievement (BROski$ reward)
+  - alert: BroskieRewardAlert
+    expr: legendary_system_health_score > 95
+    for: 5m
+    labels:
+      severity: info
+      service: broskie-rewards
+      achievement: high-performance
+    annotations:
+      summary: "💎 LEGENDARY Performance Achievement!"
+      description: "System health sustained above 95% for 5 minutes! BROski$ reward earned!"
+      achievement_name: "High Performance Sustainer"
+      broskie_amount: "500"
+      health_score: "{{ $value }}"
+
+# 🧠 MEMORY CRYSTAL MONITORING GROUP
+- name: memory_crystal_system
+  interval: 45s
+  rules:
+
+  # 🚨 CRITICAL: Memory Crystal service down
+  - alert: MemoryCrystalSystemDown
+    expr: up{job="memory-crystal-service"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: memory-crystal
+      team: legendary-ops
+    annotations:
+      summary: "🧠 Memory Crystal System OFFLINE"
+      description: "Memory Crystal service has been unreachable for over 1 minute"
+      resolution: "Restart Memory Crystal container and check logs"
+
+  # ⚠️ WARNING: High memory crystal usage
+  - alert: HighMemoryCrystalUsage
+    expr: memory_crystal_usage_percent > 80
+    for: 3m
+    labels:
+      severity: warning
+      service: memory-crystal
+      component: storage
+    annotations:
+      summary: "🧠 Memory Crystal Usage High ({{ $value }}%)"
+      description: "Memory Crystal storage usage at {{ $value }}% - consider cleanup"
+
+  # 💎 INFO: Memory Crystal efficiency achievement
+  - alert: MemoryCrystalEfficiencyReward
+    expr: memory_crystal_efficiency_score > 90
+    for: 10m
+    labels:
+      severity: info
+      service: broskie-rewards
+      achievement: crystal-efficiency
+    annotations:
+      summary: "💎 Memory Crystal Efficiency Master!"
+      description: "Crystal efficiency above 90% for 10 minutes!"
+      achievement_name: "Crystal Efficiency Master"
+      broskie_amount: "750"
+
+# 🐳 DOCKER INFRASTRUCTURE GROUP
+- name: docker_infrastructure
+  interval: 60s
+  rules:
+
+  # 🚨 CRITICAL: High container CPU usage
+  - alert: HighContainerCPU
+    expr: rate(container_cpu_usage_seconds_total{name!~".*prometheus.*"}[5m]) * 100 > 80
+    for: 5m
+    labels:
+      severity: critical
+      service: docker
+      component: cpu
+    annotations:
+      summary: "🐳 High Container CPU: {{ $labels.name }}"
+      description: "Container {{ $labels.name }} using {{ $value }}% CPU for 5+ minutes"
+      resolution: "Check container resource limits and optimize if needed"
+
+  # ⚠️ WARNING: High memory usage
+  - alert: HighContainerMemory
+    expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
+    for: 3m
+    labels:
+      severity: warning
+      service: docker
+      component: memory
+    annotations:
+      summary: "🐳 High Container Memory: {{ $labels.name }}"
+      description: "Container {{ $labels.name }} using {{ $value }}% of memory limit"
+
+  # 🚨 CRITICAL: Container restart loop
+  - alert: ContainerRestartLoop
+    expr: rate(container_last_seen[5m]) > 0
+    for: 2m
+    labels:
+      severity: critical
+      service: docker
+      component: stability
+    annotations:
+      summary: "🐳 Container Restart Loop: {{ $labels.name }}"
+      description: "Container {{ $labels.name }} has been restarting frequently"
+      resolution: "Check container logs: docker logs {{ $labels.name }}"
+
+# 📊 PROMETHEUS MONITORING GROUP
+- name: prometheus_monitoring
+  interval: 30s
+  rules:
+
+  # 🚨 CRITICAL: Prometheus target down
+  - alert: PrometheusTargetDown
+    expr: up == 0
+    for: 2m
+    labels:
+      severity: critical
+      service: prometheus
+      component: targets
+    annotations:
+      summary: "📊 Prometheus Target Down: {{ $labels.job }}"
+      description: "Prometheus target {{ $labels.job }} has been down for 2+ minutes"
+      resolution: "Check service health and network connectivity"
+
+  # ⚠️ WARNING: High Prometheus memory usage
+  - alert: PrometheusHighMemory
+    expr: (process_resident_memory_bytes{job="prometheus"} / 1024 / 1024) > 1024
+    for: 5m
+    labels:
+      severity: warning
+      service: prometheus
+      component: memory
+    annotations:
+      summary: "📊 Prometheus High Memory Usage"
+      description: "Prometheus using {{ $value }}MB of memory"
+
+# 🌐 NETWORK & CONNECTIVITY GROUP
+- name: network_connectivity
+  interval: 45s
+  rules:
+
+  # 🚨 CRITICAL: High network error rate
+  - alert: HighNetworkErrors
+    expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 10
+    for: 2m
+    labels:
+      severity: critical
+      service: network
+      component: errors
+    annotations:
+      summary: "🌐 High Network Error Rate"
+      description: "Network error rate exceeding 10 errors/second on {{ $labels.device }}"
+
+  # ⚠️ WARNING: High network utilization
+  - alert: HighNetworkUtilization
+    expr: rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m]) > 100000000
+    for: 5m
+    labels:
+      severity: warning
+      service: network
+      component: bandwidth
+    annotations:
+      summary: "🌐 High Network Utilization: {{ $labels.device }}"
+      description: "Network utilization high on interface {{ $labels.device }}"
+
+# 💾 DISK & STORAGE GROUP
+- name: disk_storage
+  interval: 60s
+  rules:
+
+  # 🚨 CRITICAL: Disk space critically low
+  - alert: DiskSpaceCritical
+    expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+    for: 2m
+    labels:
+      severity: critical
+      service: storage
+      component: disk
+    annotations:
+      summary: "💾 CRITICAL: Disk Space Low ({{ $value }}%)"
+      description: "Only {{ $value }}% disk space remaining on {{ $labels.mountpoint }}"
+      resolution: "Clean up old logs and temporary files immediately"
+
+  # ⚠️ WARNING: Disk space low
+  - alert: DiskSpaceLow
+    expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 20
+    for: 5m
+    labels:
+      severity: warning
+      service: storage
+      component: disk
+    annotations:
+      summary: "💾 Disk Space Low ({{ $value }}%)"
+      description: "{{ $value }}% disk space remaining on {{ $labels.mountpoint }}"

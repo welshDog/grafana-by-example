@@ -1,0 +1,28 @@
+# 🧠💎 MEMORY CRYSTAL SERVICE REQUIREMENTS 💎🧠
+# Python dependencies for pattern storage and caching
+
+# 🌐 Web Framework
+flask==2.3.3
+werkzeug==2.3.7
+
+# 📊 Metrics & Monitoring
+prometheus-client==0.17.1
+
+# 🗄️ Redis Cache Storage
+redis==4.6.0
+hiredis==2.2.3
+
+# 🌐 HTTP Requests
+requests==2.31.0
+
+# 🎯 ADHD-Optimized Utilities
+colorama==0.4.6
+rich==13.5.2
+
+# 🔧 System & Date Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# 📊 Data Processing
+numpy==1.24.3
+pandas==2.0.3

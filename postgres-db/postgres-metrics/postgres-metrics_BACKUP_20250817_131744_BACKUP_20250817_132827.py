@@ -71,7 +71,7 @@ if __name__ == "__main__":
                     "dbName": getArg(7,"dvdrental"),
                     "dbUser": getArg(8,"postgres"),
                     "dbPwd": getArg(9,"welcome1") }
-        logger.info("🌌 DB Config: {}".format(config), file=sys.stderr)
+        print("DB Config: {}".format(config), file=sys.stderr)
         # Configure timing
         delaySec = 3600.0 / ratePerHour
         timeoutSec = durationMinutes * 60
@@ -144,14 +144,14 @@ if __name__ == "__main__":
         cnx.close()  
 
     elif cmd == "test":
-        logger.info("🌌 test")
+        print("test")
         print( len(sys.argv) )
         print( sys.argv )
     else:
-        logger.info("🌌 Unknown Commands: [{}]\n".format(cmd))
+        print("Unknown Commands: [{}]\n".format(cmd))
         print( "Commands are:")
-        logger.info("🌌   metrics <run time seconds> <rate per hour> <report interval seconds>[debug]")
-        logger.info("🌌   db-test")
-        logger.info("🌌   test")
+        print("  metrics <run time seconds> <rate per hour> <report interval seconds>[debug]")
+        print("  db-test")
+        print("  test")
 
     exit()

@@ -1,0 +1,176 @@
+# 🔔💎⚡ LEGENDARY ALERTMANAGER CONFIGURATION ⚡💎📝
+# ADHD-optimized alerting with intelligent noise reduction
+# Integrates with Discord, email, and Memory Crystal systems
+
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@hyperfocuszone.com'
+  smtp_auth_username: 'alerts@hyperfocuszone.com'
+  smtp_auth_password: ''
+  # 🎯 ADHD-FRIENDLY: Longer resolve timeout to avoid alert spam
+  resolve_timeout: 5m
+
+# 🚀 NOTIFICATION TEMPLATES
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# 📨 ROUTING CONFIGURATION
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 12h
+  receiver: 'legendary-default'
+
+  # 🎯 PRIORITY ROUTING (ADHD-optimized)
+  routes:
+  # 🚨 CRITICAL ALERTS - Immediate notification
+  - match:
+      severity: critical
+    receiver: 'legendary-critical'
+    group_wait: 10s
+    group_interval: 5m
+    repeat_interval: 30m
+
+  # ⚠️ WARNING ALERTS - Grouped to reduce noise
+  - match:
+      severity: warning
+    receiver: 'legendary-warning'
+    group_wait: 30s
+    group_interval: 10m
+    repeat_interval: 4h
+
+  # 💎 BROSKIE REWARDS - Special handling
+  - match:
+      alertname: BroskieRewardAlert
+    receiver: 'broskie-celebration'
+    group_wait: 5s
+    repeat_interval: 24h
+
+  # 🧠 MEMORY CRYSTAL ALERTS
+  - match:
+      service: memory-crystal
+    receiver: 'memory-crystal-alerts'
+    group_wait: 15s
+    repeat_interval: 6h
+
+  # 🏥 HEALTH SERVICE ALERTS
+  - match:
+      job: legendary-health-service
+    receiver: 'health-service-alerts'
+    group_wait: 20s
+    repeat_interval: 2h
+
+# 📢 RECEIVERS CONFIGURATION
+receivers:
+# 📞 DEFAULT RECEIVER
+- name: 'legendary-default'
+  discord_configs:
+  - webhook_url: 'DISCORD_WEBHOOK_URL_HERE'
+    title: '🎯 Legendary Empire Alert'
+    message: |
+      **Alert:** {{ .GroupLabels.alertname }}
+      **Severity:** {{ .CommonLabels.severity }}
+      **Service:** {{ .CommonLabels.job }}
+      **Description:** {{ .CommonAnnotations.description }}
+      **Time:** {{ .CommonAnnotations.timestamp }}
+
+      🔍 **Details:** {{ .CommonAnnotations.summary }}
+
+# 🚨 CRITICAL ALERTS
+- name: 'legendary-critical'
+  discord_configs:
+  - webhook_url: 'DISCORD_WEBHOOK_URL_HERE'
+    title: '🚨 CRITICAL EMPIRE ALERT 🚨'
+    message: |
+      @everyone **CRITICAL SYSTEM ISSUE**
+
+      🔥 **Alert:** {{ .GroupLabels.alertname }}
+      🎯 **Service:** {{ .CommonLabels.job }}
+      ⏰ **Time:** {{ .CommonAnnotations.timestamp }}
+
+      📋 **Description:** {{ .CommonAnnotations.description }}
+      🔧 **Resolution:** {{ .CommonAnnotations.resolution | default "Check system logs and restart if necessary" }}
+
+      🏆 **Empire Status:** Requires immediate attention!
+  email_configs:
+  - to: 'admin@hyperfocuszone.com'
+    subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+    body: |
+      Critical alert in Legendary Empire monitoring system.
+
+      Alert: {{ .GroupLabels.alertname }}
+      Service: {{ .CommonLabels.job }}
+      Time: {{ .CommonAnnotations.timestamp }}
+
+      Description: {{ .CommonAnnotations.description }}
+
+# ⚠️ WARNING ALERTS
+- name: 'legendary-warning'
+  discord_configs:
+  - webhook_url: 'DISCORD_WEBHOOK_URL_HERE'
+    title: '⚠️ Empire Warning'
+    message: |
+      **Warning Alert**
+      🎯 **Service:** {{ .CommonLabels.job }}
+      📊 **Metric:** {{ .GroupLabels.alertname }}
+      📝 **Details:** {{ .CommonAnnotations.summary }}
+
+# 💎 BROSKIE CELEBRATION RECEIVER
+- name: 'broskie-celebration'
+  discord_configs:
+  - webhook_url: 'DISCORD_WEBHOOK_URL_HERE'
+    title: '💎 BROski$ Reward Alert!'
+    message: |
+      🎉 **LEGENDARY ACHIEVEMENT UNLOCKED!** 🎉
+
+      💰 **Reward:** {{ .CommonAnnotations.broskie_amount | default "1000" }} BROski$
+      🏆 **Achievement:** {{ .CommonAnnotations.achievement_name }}
+      ⚡ **Service:** {{ .CommonLabels.job }}
+
+      🚀 **Keep up the legendary work!** 💎
+
+# 🧠 MEMORY CRYSTAL ALERTS
+- name: 'memory-crystal-alerts'
+  discord_configs:
+  - webhook_url: 'DISCORD_WEBHOOK_URL_HERE'
+    title: '🧠 Memory Crystal System Alert'
+    message: |
+      **Memory Crystal Event**
+      💎 **Crystal ID:** {{ .CommonLabels.crystal_id | default "Unknown" }}
+      📊 **Event:** {{ .GroupLabels.alertname }}
+      🔍 **Details:** {{ .CommonAnnotations.description }}
+
+# 🏥 HEALTH SERVICE ALERTS
+- name: 'health-service-alerts'
+  discord_configs:
+  - webhook_url: 'DISCORD_WEBHOOK_URL_HERE'
+    title: '🏥 Health Service Alert'
+    message: |
+      **System Health Event**
+      📊 **Health Score:** {{ .CommonAnnotations.health_score | default "Unknown" }}%
+      🎯 **Component:** {{ .CommonLabels.component | default .GroupLabels.alertname }}
+      📝 **Status:** {{ .CommonAnnotations.summary }}
+
+# 🔇 INHIBITION RULES (Noise Reduction)
+inhibit_rules:
+# High priority alerts silence lower priority ones
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  equal: ['alertname', 'cluster', 'service']
+
+# Service down silences other alerts for that service
+- source_match:
+    alertname: 'ServiceDown'
+  target_match_re:
+    service: '.*'
+  equal: ['service']
+
+# Memory Crystal system down silences crystal-specific alerts
+- source_match:
+    alertname: 'MemoryCrystalSystemDown'
+  target_match:
+    service: 'memory-crystal'
+  equal: ['service']
